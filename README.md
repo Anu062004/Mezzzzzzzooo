@@ -29,6 +29,8 @@ MezoLoop combines MUSD checkout with merchant-approved referral commissions and 
 
 ### Interactive landing page
 
+[Explore the live experience](https://mezoloop.vercel.app)
+
 ![MezoLoop landing page](docs/assets/landing-preview.png)
 
 The Next.js landing page brings the MezoLoop identity into motion with a metallic WebGL loop, cursor-reactive lighting, animated payment paths, and an interactive split calculator. It includes mobile layouts, keyboard navigation, pause controls, and reduced-motion/WebGL fallbacks. The calculator is an illustration and does not move funds.

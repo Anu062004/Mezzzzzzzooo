@@ -6,5 +6,5 @@ export default defineConfig({
  use:{baseURL:'http://127.0.0.1:3000',viewport:{width:1440,height:1000},
   launchOptions:{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,args:['--enable-unsafe-swiftshader']},
  },
- webServer:{command:'npm run web:dev',url:'http://127.0.0.1:3000',reuseExistingServer:!process.env.CI,timeout:60000},
+ webServer:{command:process.env.CI?'npm run web:start':'npm run web:dev',url:'http://127.0.0.1:3000',reuseExistingServer:!process.env.CI,timeout:60000},
 });

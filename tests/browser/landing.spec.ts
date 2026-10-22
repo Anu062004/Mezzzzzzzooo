@@ -4,7 +4,8 @@ test('3D landing controls, modal, tabs, calculator and logo download',async({pag
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('/');
  await expect(page.getByRole('heading',{name:'Payments. Shared value.'})).toBeVisible();
- await expect(page.getByRole('button',{name:'Send a pulse'})).toBeEnabled();
+ await expect(page.locator('[data-renderer="webgl"] canvas')).toBeVisible({timeout:15000});
+ await expect(page.getByRole('button',{name:'Send a pulse'})).toBeEnabled({timeout:15000});
  await page.getByRole('button',{name:'Send a pulse'}).click();
  await page.getByRole('button',{name:'Pause animation'}).click();
  await expect(page.getByRole('button',{name:'Play animation'})).toHaveAttribute('aria-pressed','true');
