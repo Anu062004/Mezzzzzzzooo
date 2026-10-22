@@ -1,0 +1,19 @@
+[
+  {
+    "date": "2026-10-22",
+    "macrostructure": "Marquee Hero",
+    "theme": "MezoLoop graphite/cobalt",
+    "nav": "N9",
+    "footer": "Ft2",
+    "enrichment": "interactive WebGL loop",
+    "brief": "MezoLoop branded 3D landing page",
+    "viewports": [
+      320,
+      375,
+      414,
+      768,
+      1024,
+      1440
+    ]
+  }
+]

@@ -25,7 +25,25 @@
 
 MezoLoop combines MUSD checkout with merchant-approved referral commissions and customer cashback. A merchant signs the payment terms, the customer authorizes the transaction in their wallet, and the payment router distributes the funds atomically. Hosted services manage authentication, order metadata, and reconciliation; financial settlement remains on-chain.
 
-**Repository status:** backend and smart-contract implementation. The frontend, hosted deployment, and complete real-testnet payment verification are still in development. The contracts have not undergone an independent security audit.
+**Repository status:** backend, smart-contract implementation, and an interactive 3D landing page. Wallet-connected checkout, merchant dashboards, and complete real-testnet payment verification remain in development. The contracts have not undergone an independent security audit.
+
+### Interactive landing page
+
+![MezoLoop landing page](docs/assets/landing-preview.png)
+
+The Next.js landing page brings the MezoLoop identity into motion with a metallic WebGL loop, cursor-reactive lighting, animated payment paths, and an interactive split calculator. It includes mobile layouts, keyboard navigation, pause controls, and reduced-motion/WebGL fallbacks. The calculator is an illustration and does not move funds.
+
+```sh
+npm run web:dev
+```
+
+Open `http://localhost:3000`. For a production build, run `npm run web:build` followed by `npm run web:start`. Set `PUBLIC_SITE_URL` to your deployed origin when building for hosting.
+
+[Download the transparent logo](apps/web/public/brand/mezoloop-logo.png)
+
+### Deploy to Vercel
+
+From the repository root, run `vercel --prod`. The included configuration builds the landing page as a static Next.js export. Vercel supplies the production domain for social-sharing metadata; `PUBLIC_SITE_URL` can override it. The API, PostgreSQL database, and worker require separate hosting.
 
 ### Capabilities
 
@@ -175,12 +193,16 @@ npm run typecheck
 npm test
 npm run contracts:test
 npm run chain:smoke
+npm run web:build
+npx playwright install chromium
+npm run web:test
 ```
 
 - **Backend tests** exercise wallet authentication, session replay and expiry, merchant access, immutable quotes, idempotency, tampered signatures, monetary precision, and pending-only transaction submissions using embedded PostgreSQL.
 - **Contract tests** cover settlement, refunds, replay, atomic failure, reward budgets, subscriptions, registry permissions, and offer redemption. Split conservation is fuzz-tested across 256 randomized inputs.
 - **Chain smoke checks** read the configured testnet and token interface without broadcasting a transaction. They do not establish successful payment settlement.
-- **CI** runs TypeScript checks, backend and contract tests, PostgreSQL migration checks, and dependency auditing.
+- **Browser tests** cover the 3D controls, calculator, navigation, modal, logo download, responsive layouts, reduced motion, and unavailable WebGL.
+- **CI** runs TypeScript checks, backend and contract tests, frontend build/browser checks, PostgreSQL migration checks, and dependency auditing.
 
 The worker's restart/reorg behavior and the complete deployed checkout flow still require end-to-end validation.
 
@@ -190,6 +212,7 @@ The worker's restart/reorg behavior and the complete deployed checkout flow stil
 apps/
   api/src/           Authentication, merchant workflows, checkout and protocol APIs
   worker/src/        Chain indexing, recurring execution and webhook delivery
+  web/               Next.js landing page, WebGL scene and downloadable brand assets
 contracts/
   src/               Solidity protocol contracts
   test/              Foundry unit and fuzz tests

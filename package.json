@@ -15,11 +15,18 @@
     "chain:smoke": "node --env-file-if-exists=.env --import tsx packages/chain/smoke.ts",
     "worker": "node --env-file-if-exists=.env --import tsx apps/worker/src/server.ts",
     "contracts:build": "forge build --root contracts && tsx scripts/generate-abi.ts",
-    "contracts:test": "forge test --root contracts -vv"
+    "contracts:test": "forge test --root contracts -vv",
+    "web:dev": "next dev apps/web --hostname 127.0.0.1",
+    "web:build": "next build apps/web",
+    "web:start": "next start apps/web --hostname 127.0.0.1",
+    "web:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
+    "web:test": "playwright test"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",
     "@fastify/rate-limit": "^10.0.0",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
     "@openzeppelin/contracts": "5.0.2",
     "@zxing/browser": "^0.2.1",
     "fastify": "^5.0.0",
@@ -28,6 +35,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "three": "^0.186.1",
     "tsx": "^4.0.0",
     "viem": "^2.0.0",
     "zod": "^4.0.0"
@@ -40,6 +48,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
     "typescript": "^5.0.0"
   }
 }

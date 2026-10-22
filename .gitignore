@@ -14,6 +14,7 @@ contracts/broadcast/
 .env.*
 !.env.example
 .local/
+.vercel/
 *.pem
 *.key
 *.p12
@@ -26,3 +27,5 @@ secrets/
 .DS_Store
 playwright-report/
 test-results/
+.vercel
+.env*

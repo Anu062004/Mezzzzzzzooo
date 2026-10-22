@@ -75,4 +75,6 @@ Webhook registration requires merchant authorization. Delivery secrets use AES-2
 
 The repository includes backend integration tests and Foundry unit/fuzz tests. These checks cover the asserted behaviors in their test files; they are not an independent security audit.
 
-Remaining integration work includes worker restart/reorg tests, deployed MUSD and MEZO transfers, the customer/merchant frontend, deployment automation and monitoring, and an end-to-end receipt matched to a public testnet transaction. No mainnet readiness or completed hosted deployment is claimed.
+Remaining integration work includes worker restart/reorg tests, deployed MUSD and MEZO transfers, the wallet-connected customer/merchant frontend, deployment automation and monitoring, and an end-to-end receipt matched to a public testnet transaction. No mainnet readiness or completed hosted deployment is claimed.
+
+The separate landing page is a presentation layer with a local payment-split illustration. It does not connect wallets or broadcast payments.
