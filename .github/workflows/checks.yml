@@ -1,0 +1,36 @@
+name: Protocol checks
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: mezoloop
+          POSTGRES_PASSWORD: mezoloop
+          POSTGRES_DB: mezoloop
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U mezoloop'
+          --health-interval 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://mezoloop:mezoloop@localhost:5432/mezoloop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.5
+      - run: npm run contracts:build
+      - run: npm run contracts:test
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run db:migrate
+      - run: npm run db:migrate
+      - run: npm audit --audit-level=high

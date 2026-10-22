@@ -1,0 +1,28 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+.next/
+out/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+*.tsbuildinfo
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.local/
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+secrets/
+
+# Runtime and editor files
+*.log
+.DS_Store
+playwright-report/
+test-results/
