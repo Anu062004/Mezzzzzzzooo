@@ -9,6 +9,7 @@ import type { Database } from '../../../packages/db/index.js';
 import { registerProtocol } from './protocol.js';
 import type { ChainClient } from '../../../packages/chain/client.js';
 import type { Config } from './config.js';
+import { paymentRouterAbi } from '../../../packages/chain/abi.js';
 
 export interface Verifier {
   verifyMessage(input: { address: Address; message: string; signature: Hex }): Promise<boolean>;
@@ -102,6 +103,7 @@ export async function buildApp(db: Database, config: Config, verifier: Verifier,
     return { status: 'ok', payments: client && config.router ? 'enabled' : 'not_enabled', routerConfigured: Boolean(config.router) };
   });
   app.get('/v1/network', async () => ({ chainId: mezoTestnet.id, token: MUSD, symbol: 'MUSD',
+    subscriptionManager: client && config.router ? await client.readContract({address:config.router,abi:paymentRouterAbi,functionName:'subscriptionManager'}) : null,
     router: config.router ?? null, explorerUrl: mezoTestnet.blockExplorers.default.url,
     rewardsVault: config.rewardsVault ?? null, registry: config.registry ?? null, offers: config.offers ?? null, rpcUrl: config.rpcUrl, settlementEnabled: Boolean(client && config.router) }));
 

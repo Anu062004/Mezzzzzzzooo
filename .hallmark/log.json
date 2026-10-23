@@ -1,5 +1,18 @@
 [
   {
+    "date": "2026-10-23",
+    "macrostructure": "Application workspace",
+    "theme": "MezoLoop graphite/cobalt",
+    "enrichment": "none",
+    "brief": "Wallet-connected merchant workspace and customer checkout/account interfaces",
+    "viewports": [
+      320,
+      375,
+      768,
+      1440
+    ]
+  },
+  {
     "date": "2026-10-22",
     "macrostructure": "Marquee Hero",
     "theme": "MezoLoop graphite/cobalt",

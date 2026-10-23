@@ -25,7 +25,7 @@
 
 MezoLoop combines MUSD checkout with merchant-approved referral commissions and customer cashback. A merchant signs the payment terms, the customer authorizes the transaction in their wallet, and the payment router distributes the funds atomically. Hosted services manage authentication, order metadata, and reconciliation; financial settlement remains on-chain.
 
-**Repository status:** backend, smart-contract implementation, and an interactive 3D landing page. Wallet-connected checkout, merchant dashboards, and complete real-testnet payment verification remain in development. The contracts have not undergone an independent security audit.
+**Repository status:** five smart contracts, backend services, wallet-connected merchant and customer interfaces, and an interactive 3D landing page. Hosted API/worker setup, deployed contract configuration, and complete real-testnet payment verification remain required. The contracts have not undergone an independent security audit.
 
 ### Interactive landing page
 
@@ -43,9 +43,15 @@ Open `http://localhost:3000`. For a production build, run `npm run web:build` fo
 
 [Download the transparent logo](apps/web/public/brand/mezoloop-logo.png)
 
+### Merchant and customer workspaces
+
+[Merchant workspace](https://mezoloop.vercel.app/merchant) · [Customer account](https://mezoloop.vercel.app/customer)
+
+Merchants can create and sign checkout links, share QR codes, review sales, manage referrals, fund rewards, issue offers, and prepare bounded subscription plans. Customers can scan a QR, review exact payment terms, pay through their wallet, view verified receipts, claim eligible rewards, and cancel recurring billing. Live actions require the configured API and deployed contracts. See [frontend setup and behavior](docs/frontend.md).
+
 ### Deploy to Vercel
 
-From the repository root, run `vercel --prod`. The included configuration builds the landing page as a static Next.js export. Vercel supplies the production domain for social-sharing metadata; `PUBLIC_SITE_URL` can override it. The API, PostgreSQL database, and worker require separate hosting.
+From the repository root, run `vercel --prod`. The included configuration builds the Next.js application, including dynamic checkout routes and a same-origin API proxy. Set the server-only `API_ORIGIN` on Vercel to your hosted API origin. Vercel supplies the production domain for social-sharing metadata; `PUBLIC_SITE_URL` can override it. The Fastify API, PostgreSQL database, and worker require separate hosting.
 
 ### Capabilities
 
@@ -155,6 +161,8 @@ Copy [`.env.example`](.env.example) and configure the values locally. The exampl
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection |
+| `API_ORIGIN` | Server-only URL used by the web app to reach Fastify |
+| `PUBLIC_SITE_URL` | Optional public origin for web metadata |
 | `PUBLIC_APP_URL` | Exact browser origin used for authentication and checkout links |
 | `MEZO_RPC_HTTP` | Primary RPC endpoint |
 | `MEZO_RPC_FALLBACK` | Optional fallback RPC endpoint |
@@ -203,7 +211,7 @@ npm run web:test
 - **Backend tests** exercise wallet authentication, session replay and expiry, merchant access, immutable quotes, idempotency, tampered signatures, monetary precision, and pending-only transaction submissions using embedded PostgreSQL.
 - **Contract tests** cover settlement, refunds, replay, atomic failure, reward budgets, subscriptions, registry permissions, and offer redemption. Split conservation is fuzz-tested across 256 randomized inputs.
 - **Chain smoke checks** read the configured testnet and token interface without broadcasting a transaction. They do not establish successful payment settlement.
-- **Browser tests** cover the 3D controls, calculator, navigation, modal, logo download, responsive layouts, reduced motion, and unavailable WebGL.
+- **Browser tests** cover the 3D controls, calculator, navigation, modal, logo download, responsive layouts, reduced motion, and unavailable WebGL. Workspace tests also exercise wallet sign-in, checkout signing and draft recovery, exact approval/payment requests, rejection of tampered calldata, session changes, safe QR links, and mobile layouts.
 - **CI** runs TypeScript checks, backend and contract tests, frontend build/browser checks, PostgreSQL migration checks, and dependency auditing.
 
 The worker's restart/reorg behavior and the complete deployed checkout flow still require end-to-end validation.
@@ -214,7 +222,7 @@ The worker's restart/reorg behavior and the complete deployed checkout flow stil
 apps/
   api/src/           Authentication, merchant workflows, checkout and protocol APIs
   worker/src/        Chain indexing, recurring execution and webhook delivery
-  web/               Next.js landing page, WebGL scene and downloadable brand assets
+  web/               Next.js landing page, wallet workspaces, API proxy and brand assets
 contracts/
   src/               Solidity protocol contracts
   test/              Foundry unit and fuzz tests

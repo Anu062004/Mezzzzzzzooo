@@ -5,7 +5,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { verifyMessage, verifyTypedData, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { buildApp, type Verifier } from '../apps/api/src/app.js';
-import { configFromEnv } from '../apps/api/src/config.js';
+import { configFromEnv, type Config } from '../apps/api/src/config.js';
 import { quoteHash, split, typedQuote, ZERO, MUSD } from '../packages/chain/index.js';
 import type { Database } from '../packages/db/index.js';
 
@@ -17,7 +17,7 @@ const origin = 'http://localhost:3000';
 const config = configFromEnv({ DATABASE_URL: 'postgres://unused', PUBLIC_APP_URL: origin, PAYMENT_ROUTER_ADDRESS: router });
 const schema = await readFile(new URL('../packages/db/001_initial.sql', import.meta.url), 'utf8');
 
-async function fixture(t: TestContext, verifier?: Verifier, routerConfigured = true) {
+async function fixture(t: TestContext, verifier?: Verifier, routerConfigured = true, overrides:Partial<Config> = {}) {
   const pg = new PGlite();
   await pg.exec(schema);
   await pg.exec(await readFile(new URL('../packages/db/002_protocol.sql', import.meta.url),'utf8'));
@@ -28,7 +28,7 @@ async function fixture(t: TestContext, verifier?: Verifier, routerConfigured = t
       transaction: () => { throw new Error('Nested transaction'); },
     })),
   };
-  const app = await buildApp(db, { ...config, router: routerConfigured ? router : undefined }, verifier ?? {
+  const app = await buildApp(db, { ...config, router: routerConfigured ? router : undefined, ...overrides }, verifier ?? {
     verifyMessage: input => verifyMessage(input),
     verifyQuote: input => verifyTypedData(input),
   });
@@ -213,4 +213,24 @@ test('expired quotes cannot authorize, generate checkout links or accept transac
   assert.equal(retry.statusCode, 200);
   assert.equal(retry.json().id, data.order.id);
   assert.equal(retry.json().status, 'expired');
+});
+
+test('merchant plan lists enforce ownership and preserve unsigned drafts for retry',async t=>{
+ const {app,db,order,login}=await fixture(t);const data=await order();
+ const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ await db.query('INSERT INTO subscription_plans(id,merchant_id,terms) VALUES($1,$2,$3)',[id,data.order.merchantId,JSON.stringify({amount:'20',merchant:merchant.address.toLowerCase()})]);
+ const url=`/v1/merchants/${data.order.merchantId}/plans`;
+ assert.equal((await app.inject({url})).statusCode,401);
+ assert.equal((await app.inject({url,cookies:await login(stranger)})).statusCode,403);
+ const result=await app.inject({url,cookies:data.cookies});assert.equal(result.statusCode,200);assert.equal(result.json().plans[0].id,id);assert.equal(result.json().plans[0].signature,null);
+});
+
+test('campaign creation can be retried from stored terms only by the owning merchant',async t=>{
+ const {app,db,order,login}=await fixture(t,undefined,true,{rewardsVault:router});const data=await order();
+ const created=await app.inject({method:'POST',url:'/v1/campaigns',headers:{origin},cookies:data.cookies,payload:{merchantId:data.order.merchantId,name:'Return visit',rewardAtomic:'10',minimumPurchaseAtomic:'20',startsAt:Math.floor(Date.now()/1000),expiresAt:Math.floor(Date.now()/1000)+86400}});
+ assert.equal(created.statusCode,200,created.body);const url=`/v1/campaigns/${created.json().id}/create`;
+ const request={method:'POST' as const,url,headers:{origin},cookies:data.cookies};
+ const retry=await app.inject(request);assert.equal(retry.statusCode,200,retry.body);assert.deepEqual(retry.json(),created.json().transaction);
+ assert.equal((await app.inject({...request,cookies:await login(stranger)})).statusCode,403);
+ await db.query("UPDATE campaigns SET terms=jsonb_set(terms,'{expiresAt}','1') WHERE id=$1",[created.json().id]);assert.equal((await app.inject(request)).statusCode,409);
 });

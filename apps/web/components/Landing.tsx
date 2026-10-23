@@ -24,8 +24,8 @@ export default function Landing(){
   <a className="skip-link" href="#main">Skip to content</a>
   <header className="site-header wrap">
    <a className="brand" href="#" aria-label="MezoLoop home"><img src="/brand/mezoloop-logo.png" width="58" height="58" alt=""/><span>MezoLoop</span></a>
-   <nav aria-label="Main navigation" className={menu?'nav open':'nav'}><a href="#how-it-works" onClick={()=>setMenu(false)}>The loop</a><a href="#explore" onClick={()=>setMenu(false)}>How it works</a><a href={`${REPO}#getting-started`} target="_blank" rel="noreferrer">Developers <Arrow diagonal/></a></nav>
-   <a className="header-cta" href="#explore">Explore the protocol <Arrow/></a>
+   <nav aria-label="Main navigation" className={menu?'nav open':'nav'}><a href="#how-it-works" onClick={()=>setMenu(false)}>The loop</a><a href="#explore" onClick={()=>setMenu(false)}>How it works</a><a href="/customer">Your account <Arrow diagonal/></a><a href={`${REPO}#getting-started`} target="_blank" rel="noreferrer">Developers <Arrow diagonal/></a></nav>
+   <a className="header-cta" href="/merchant">Merchant workspace <Arrow/></a>
    <button className="menu-toggle" onClick={()=>setMenu(!menu)} aria-expanded={menu} aria-label={menu?'Close navigation':'Open navigation'}>{menu?'Close':'Menu'}</button>
   </header>
   <main id="main">

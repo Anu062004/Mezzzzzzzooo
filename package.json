@@ -16,9 +16,9 @@
     "worker": "node --env-file-if-exists=.env --import tsx apps/worker/src/server.ts",
     "contracts:build": "forge build --root contracts && tsx scripts/generate-abi.ts",
     "contracts:test": "forge test --root contracts -vv",
-    "web:dev": "next dev apps/web --hostname 127.0.0.1",
-    "web:build": "next build apps/web",
-    "web:start": "next start apps/web --hostname 127.0.0.1",
+    "web:dev": "node scripts/web.mjs dev --hostname 127.0.0.1",
+    "web:build": "node scripts/web.mjs build",
+    "web:start": "node scripts/web.mjs start --hostname 127.0.0.1",
     "web:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "web:test": "playwright test"
   },
