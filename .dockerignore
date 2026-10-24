@@ -1,0 +1,14 @@
+**
+!package.json
+!package-lock.json
+!apps/
+!apps/api/
+!apps/api/**
+!apps/worker/
+!apps/worker/**
+!packages/
+!packages/**
+**/.env*
+**/*.key
+**/*.pem
+**/node_modules

@@ -41,7 +41,7 @@ export async function indexContract(db:Database,client:ChainClient,config:Config
    await tx.query('DELETE FROM indexed_blocks WHERE contract=$1 AND number>=$2',[contract.toLowerCase(),from.toString()]);
   }
   for(const {log,eventName,args} of events)await tx.query('INSERT INTO chain_events(chain_id,tx_hash,log_index,contract,block_number,block_hash,event_name,payload,canonical) VALUES(31611,$1,$2,$3,$4,$5,$6,$7,true) ON CONFLICT(chain_id,tx_hash,log_index) DO UPDATE SET block_hash=excluded.block_hash,block_number=excluded.block_number,payload=excluded.payload,canonical=true',[log.transactionHash,log.logIndex,contract.toLowerCase(),String(log.blockNumber),log.blockHash,eventName,json(args)]);
-  await tx.query("UPDATE chain_events SET confirmation_state=CASE WHEN block_number<=$1 THEN 'final' WHEN block_number<=$2 THEN 'confirmed' ELSE 'observed' END WHERE canonical",[(head-BigInt(config.finality)+1n).toString(),(head-BigInt(config.confirmations)+1n).toString()]);
+  await tx.query("UPDATE chain_events SET confirmation_state=CASE WHEN block_number<=$1 THEN 'final' WHEN block_number<=$2 THEN 'confirmed' ELSE 'observed' END WHERE canonical AND contract=$3",[(head-BigInt(config.finality)+1n).toString(),(head-BigInt(config.confirmations)+1n).toString(),contract.toLowerCase()]);
   await project(tx);
   await tx.query('INSERT INTO indexed_blocks(contract,number,hash) VALUES($1,$2,$3) ON CONFLICT(contract,number) DO UPDATE SET hash=excluded.hash',[contract.toLowerCase(),to.toString(),end.hash]);
   await tx.query('INSERT INTO indexer_cursors(contract,last_block,last_hash) VALUES($1,$2,$3) ON CONFLICT(contract) DO UPDATE SET last_block=excluded.last_block,last_hash=excluded.last_hash,updated_at=now()',[contract.toLowerCase(),to.toString(),end.hash]);

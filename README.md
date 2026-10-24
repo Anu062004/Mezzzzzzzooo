@@ -47,11 +47,11 @@ Open `http://localhost:3000`. For a production build, run `npm run web:build` fo
 
 [Merchant workspace](https://mezoloop.vercel.app/merchant) · [Customer account](https://mezoloop.vercel.app/customer)
 
-Merchants can create and sign checkout links, share QR codes, review sales, manage referrals, fund rewards, issue offers, and prepare bounded subscription plans. Customers can scan a QR, review exact payment terms, pay through their wallet, view verified receipts, claim eligible rewards, and cancel recurring billing. Live actions require the configured API and deployed contracts. See [frontend setup and behavior](docs/frontend.md).
+Merchants can create and sign checkout links, share QR codes, review sales, manage referrals, fund rewards, issue offers, and prepare bounded subscription plans. Customers can scan a QR, review exact payment terms, pay through their wallet, recover a submitted payment after refresh, download or print verified receipts, claim eligible rewards, and cancel recurring billing. Selected merchant checkouts update automatically as payments are confirmed. Live actions require the configured API and deployed contracts. See [frontend setup and behavior](docs/frontend.md).
 
 ### Deploy to Vercel
 
-From the repository root, run `vercel --prod`. The included configuration builds the Next.js application, including dynamic checkout routes and a same-origin API proxy. Set the server-only `API_ORIGIN` on Vercel to your hosted API origin. Vercel supplies the production domain for social-sharing metadata; `PUBLIC_SITE_URL` can override it. The Fastify API, PostgreSQL database, and worker require separate hosting.
+From the repository root, run `vercel --prod`. The included configuration builds the Next.js application, including dynamic checkout routes and a same-origin API proxy. Set the server-only `API_ORIGIN` on Vercel to your hosted API origin. Vercel supplies the production domain for social-sharing metadata; `PUBLIC_SITE_URL` can override it. The Fastify API, PostgreSQL database, and worker require separate hosting. The [deployment guide](docs/deployment.md) covers the Docker services, contract deployment script, configuration, and verification.
 
 ### Capabilities
 
@@ -202,6 +202,7 @@ Order creation requires an `Idempotency-Key`. Transaction submission returns **2
 npm run typecheck
 npm test
 npm run contracts:test
+npm run test:payments
 npm run chain:smoke
 npm run web:build
 npx playwright install chromium
@@ -214,7 +215,7 @@ npm run web:test
 - **Browser tests** cover the 3D controls, calculator, navigation, modal, logo download, responsive layouts, reduced motion, and unavailable WebGL. Workspace tests also exercise wallet sign-in, checkout signing and draft recovery, exact approval/payment requests, rejection of tampered calldata, session changes, safe QR links, and mobile layouts.
 - **CI** runs TypeScript checks, backend and contract tests, frontend build/browser checks, PostgreSQL migration checks, and dependency auditing.
 
-The worker's restart/reorg behavior and the complete deployed checkout flow still require end-to-end validation.
+A disposable Anvil/PostgreSQL integration test verifies API-to-contract settlement, worker restart, confirmation isolation, and reorg recovery. Complete hosted checkout verification with actual Mezo Testnet assets remains required.
 
 ## Repository structure
 
@@ -226,6 +227,7 @@ apps/
 contracts/
   src/               Solidity protocol contracts
   test/              Foundry unit and fuzz tests
+  script/            Guarded Mezo Testnet deployment
 packages/
   chain/             Shared ABIs, typed signatures, chain configuration and reads
   db/                PostgreSQL migrations and transaction helpers
@@ -236,6 +238,7 @@ docs/               Protocol reference and project artwork
 
 ## References
 
+- [Deployment and payment verification](docs/deployment.md)
 - [Protocol design and implementation notes](docs/protocol.md)
 - [Mezo developer environment](https://mezo.org/docs/developers/getting-started/configure-environment/)
 - [Mezo token and contract reference](https://mezo.org/docs/users/resources/contracts-reference)

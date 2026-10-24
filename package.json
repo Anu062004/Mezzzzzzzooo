@@ -20,7 +20,8 @@
     "web:build": "node scripts/web.mjs build",
     "web:start": "node scripts/web.mjs start --hostname 127.0.0.1",
     "web:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
-    "web:test": "playwright test"
+    "web:test": "playwright test",
+    "test:payments": "tsx --test tests/payment-flow.integration.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",

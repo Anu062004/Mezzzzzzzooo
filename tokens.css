@@ -1,2 +1,2 @@
 /* Workspace status colors extend the existing MezoLoop brand tokens. */
-:root { --w-success:oklch(80% .13 159); --w-warning:oklch(85% .1 80); --w-error:oklch(84% .09 25); --qr-paper:oklch(100% 0 0); }
+:root { --w-success:oklch(80% .13 159); --w-warning:oklch(85% .1 80); --w-error:oklch(84% .09 25); --qr-paper:oklch(100% 0 0); --print-paper:oklch(100% 0 0); --print-ink:oklch(0% 0 0); --print-rule:oklch(50% 0 0); }

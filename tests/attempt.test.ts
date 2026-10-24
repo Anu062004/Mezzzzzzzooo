@@ -1,0 +1,20 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {encodeFunctionData} from 'viem';
+import {paymentAttempt} from '../packages/chain/attempt.js';
+import {paymentRouterAbi} from '../packages/chain/abi.js';
+import {MUSD,ZERO,typedQuote} from '../packages/chain/index.js';
+import type {ChainClient} from '../packages/chain/client.js';
+const hash=`0x${'aa'.repeat(32)}` as const,blockHash=`0x${'bb'.repeat(32)}` as const;
+const payer=`0x${'11'.repeat(20)}`,router=`0x${'22'.repeat(20)}` as const;
+const order={signature:'0x1234' as const,quote:{router,terms:{orderId:hash,merchant:payer,token:MUSD,partner:ZERO,amount:'20',referralBps:0,cashbackBps:500,deadline:'2000000000'}}};
+const transaction={from:payer,to:router,input:encodeFunctionData({abi:paymentRouterAbi,functionName:'pay',args:[typedQuote(order.quote.terms as any,router).message,order.signature]}),value:0n};
+const client=(overrides={})=>({getTransaction:async()=>transaction,getTransactionReceipt:async()=>({blockNumber:10n,blockHash,status:'reverted'}),getBlock:async()=>({hash:blockHash}),getBlockNumber:async()=>12n,...overrides}) as unknown as ChainClient;
+test('only an exact payment reverted at confirmation depth permits another attempt',async()=>{
+ assert.deepEqual(await paymentAttempt(client(),order,hash,payer,3),{state:'reverted',retryAllowed:true});
+ assert.deepEqual(await paymentAttempt(client({getBlockNumber:async()=>10n}),order,hash,payer,3),{state:'confirming_revert',retryAllowed:false});
+ for(const extra of [{to:payer},{from:router},{input:'0x'},{value:1n}])assert.deepEqual(await paymentAttempt(client({getTransaction:async()=>({...transaction,...extra})}),order,hash,payer,3),{state:'unrelated',retryAllowed:false});
+ assert.deepEqual(await paymentAttempt(client({getBlock:async()=>({hash})}),order,hash,payer,3),{state:'uncertain',retryAllowed:false});
+ assert.deepEqual(await paymentAttempt(client({getTransactionReceipt:async()=>{throw new Error('RPC unavailable');}}),order,hash,payer,3),{state:'pending',retryAllowed:false});
+ assert.deepEqual(await paymentAttempt(client({getTransactionReceipt:async()=>({blockNumber:10n,blockHash,status:'success'})}),order,hash,payer,3),{state:'included',retryAllowed:false});
+});

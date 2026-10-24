@@ -10,6 +10,7 @@ import { registerProtocol } from './protocol.js';
 import type { ChainClient } from '../../../packages/chain/client.js';
 import type { Config } from './config.js';
 import { paymentRouterAbi } from '../../../packages/chain/abi.js';
+import { paymentAttempt } from '../../../packages/chain/attempt.js';
 
 export interface Verifier {
   verifyMessage(input: { address: Address; message: string; signature: Hex }): Promise<boolean>;
@@ -208,7 +209,11 @@ export async function buildApp(db: Database, config: Config, verifier: Verifier,
     });
     return viewOrder(updated);
   });
-  app.get('/v1/orders/:id', async request => viewOrder(await readableOrder(request)));
+  app.get('/v1/orders/:id', async request => {
+    const row=await readableOrder(request);
+    const merchant=(await db.query('SELECT id,name,owner_wallet FROM merchants WHERE id=$1',[row.merchant_id])).rows[0];
+    return {...viewOrder(row),merchant};
+  });
   app.get('/v1/orders/:id/qr', async request => {
     const row = await readableOrder(request);
     if (!row.signature) throw new ApiError(409, 'ORDER_NOT_AUTHORIZED');
@@ -223,24 +228,34 @@ export async function buildApp(db: Database, config: Config, verifier: Verifier,
     await db.transaction(async tx => {
       const order = await getOrder(id, tx, true);
       if (!order.signature) throw new ApiError(409, 'ORDER_NOT_AUTHORIZED');
-      if (['observed','confirmed','final','cancelled'].includes(order.status)) throw new ApiError(409, 'ORDER_ALREADY_SETTLED');
-      if (new Date(order.expires_at).getTime() <= Date.now()) throw new ApiError(409, 'ORDER_EXPIRED');
+      // Delayed callbacks may arrive after expiry or indexing. Recording a hint
+      // neither authorizes a new payment nor overwrites canonical settlement.
       const inserted = await tx.query('INSERT INTO transactions(chain_id,tx_hash,order_id,submitted_by) VALUES (31611,$1,$2,$3) ON CONFLICT DO NOTHING RETURNING tx_hash', [input.txHash, id, wallet]);
       if (!inserted.rows.length) {
         const existing = (await tx.query('SELECT order_id,submitted_by FROM transactions WHERE chain_id=31611 AND tx_hash=$1', [input.txHash])).rows[0];
         if (existing.order_id !== id || existing.submitted_by !== wallet) throw new ApiError(409, 'TRANSACTION_CONFLICT');
       } else {
-        await tx.query("UPDATE orders SET status='submitted' WHERE id=$1", [id]);
+        await tx.query("UPDATE orders SET status='submitted' WHERE id=$1 AND status IN ('quoted','created','submitted','uncertain','reverted')", [id]);
         await tx.query("INSERT INTO order_events(order_id,event_type) VALUES ($1,'transaction_submitted')", [id]);
       }
     });
     return reply.code(202).send({ orderId: id, txHash: input.txHash, status: 'pending', settlementVerified: false });
   });
+  app.get('/v1/orders/:id/attempt', async request => {
+    const wallet=await currentWallet(request);
+    const {id}=z.object({id:uuid}).parse(request.params);
+    const order=await getOrder(id);
+    const attempt=(await db.query('SELECT tx_hash FROM transactions WHERE order_id=$1 AND submitted_by=$2 ORDER BY created_at DESC,tx_hash DESC LIMIT 1',[id,wallet])).rows[0];
+    if(!attempt)return {attempt:null};
+    const result=client?await paymentAttempt(client,order,attempt.tx_hash,wallet,config.confirmations):{state:'pending',retryAllowed:false};
+    return {attempt:{hash:attempt.tx_hash,payer:wallet,...result}};
+  });
   app.get('/v1/orders/:id/status', async request => {
     const row = await readableOrder(request);
     const settled = ['confirmed','final'].includes(row.status);
     return { orderId: row.id, status: viewOrder(row).status, settlementVerified: settled,
-      settlement: settled ? row.settlement : null, explorerUrl: row.settlement_tx ? `${mezoTestnet.blockExplorers.default.url}/tx/${row.settlement_tx}` : null,
+      settlement: settled ? row.settlement : null, transactionHash:row.settlement_tx, blockNumber:row.settlement_block,
+      explorerUrl: row.settlement_tx ? `${mezoTestnet.blockExplorers.default.url}/tx/${row.settlement_tx}` : null,
       reason: client ? null : 'CHAIN_RECONCILIATION_NOT_ENABLED' };
   });
   await registerProtocol(app,{db,config,client,verifier,currentWallet,merchantFor,getOrder,viewOrder});

@@ -1,4 +1,5 @@
-/* Hallmark · macrostructure: application workspace · theme: existing MezoLoop graphite/cobalt */
+/* Hallmark · macrostructure: application workspace · theme: existing MezoLoop graphite/cobalt
+ * pre-emit critique: P4 H4 E4 S5 R4 V4 */
 @import '../../../../tokens.css';
 .workspace { min-height:100svh; display:grid; grid-template-columns:232px minmax(0,1fr); font-size:14px; }
 .workspace-sidebar { padding:24px 20px; border-right:1px solid var(--rule); background:var(--paper-raised); display:flex; flex-direction:column; gap:24px; position:sticky; top:0; height:100svh; }
@@ -55,3 +56,16 @@
 @media(max-width:1100px){.workspace{grid-template-columns:200px minmax(0,1fr);}.workspace-content{padding:28px;}.workspace-header{padding:20px 28px;}.w-grid{grid-template-columns:1fr;}.w-stats{grid-template-columns:repeat(3,minmax(0,1fr));}.w-stat{padding:20px;}}
 @media(max-width:760px){.workspace{display:block;}.workspace-sidebar{height:auto;position:static;padding:16px;border-right:0;border-bottom:1px solid var(--rule);gap:14px;}.workspace-brand{font-size:22px;}.workspace-brand img{width:42px;height:42px;}.workspace-role{display:none;}.workspace-sidebar nav{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px;}.workspace-sidebar nav button{flex-shrink:0;padding:9px 12px;min-height:44px;}.workspace-sidebar nav button span{display:none;}.sidebar-bottom{padding:0;margin:0;display:flex;justify-content:space-between;gap:12px;align-items:center;}.sidebar-bottom p,.sidebar-bottom>a:last-child{display:none;}.sidebar-bottom>a{font-size:10px;}.network-badge{font-size:10px;}.workspace-header{padding:16px;min-height:76px;}.workspace-header>span{font-size:9px;}.workspace-header b{margin:0 6px;}.wallet-controls{gap:8px;}.wallet-address{font-size:10px;}.workspace-content{padding:28px 16px;}.w-heading{align-items:flex-start;flex-direction:column;gap:16px;}.w-heading h1{font-size:32px;}.w-stats{grid-template-columns:1fr;}.w-stat{padding:20px;border-right:0;border-bottom:1px solid var(--rule);}.w-stat:last-child{border-bottom:0;}.w-stat strong{font-size:28px;margin:8px 0;}.w-panel{padding:20px;}.w-grid.equal{grid-template-columns:1fr;}.w-empty{padding:32px 16px;}.w-empty h3{font-size:21px;}.workspace-footer{padding:20px 16px;flex-wrap:wrap;}.w-button{padding:10px 12px;font-size:11px;}.workspace-dialog{padding:24px;}.toolbar{flex-wrap:wrap;}.toolbar .w-field{flex-basis:100%;}.field-row{gap:12px;}}
 @media(prefers-reduced-motion:reduce){.workspace *{scroll-behavior:auto!important;transition:none!important;}}
+.payment-steps{display:flex;list-style:none;padding:0;margin:0 0 28px;gap:16px;counter-reset:payment;}
+.payment-steps li{flex:1;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;line-height:1.5;}
+.payment-steps li>span{display:grid;place-items:center;flex-shrink:0;width:26px;height:26px;border:1px solid var(--rule);border-radius:50%;font-variant-numeric:tabular-nums;}
+.payment-steps li[aria-current=step]{color:var(--ink);}.payment-steps li[aria-current=step]>span{border-color:var(--accent-light);color:var(--accent-light);}
+.payment-steps li[data-complete=true]>span{color:var(--w-success);border-color:currentColor;}
+.payment-stage{color:var(--accent-light);font-size:13px;}
+.wallet-help{margin:24px 0;border-top:1px solid var(--rule);padding-top:16px;font-size:12px;color:var(--muted);}
+.wallet-help summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--ink);}.wallet-help ol{padding-left:20px;line-height:1.8;}.wallet-help li{margin-bottom:12px;}.wallet-help p{font-size:12px;}
+@media(max-width:480px){.payment-steps{gap:8px;}.payment-steps li{font-size:10px;gap:6px;align-items:flex-start;}}
+@media print{
+ .workspace{display:block;background:var(--print-paper);color:var(--print-ink);}.workspace-sidebar,.workspace-header,.workspace-footer,.workspace-dialog,.skip-link,.workspace-content>.w-notice,.workspace-content>.w-alert,.transaction-link,.payment-steps,.action-row,.wallet-help{display:none!important;}
+ .workspace-content{padding:0;}.checkout-summary{max-width:none;}.w-panel{border:1px solid var(--print-rule);background:var(--print-paper);box-shadow:none;break-inside:avoid;}.workspace dt,.workspace dd,.panel-heading p,.w-heading p,.checkout-total small,.w-notice{color:var(--print-ink);}.w-notice{background:var(--print-paper);}.workspace a{color:var(--print-ink);}
+}

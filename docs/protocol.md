@@ -75,6 +75,6 @@ Webhook registration requires merchant authorization. Delivery secrets use AES-2
 
 The repository includes backend integration tests and Foundry unit/fuzz tests. These checks cover the asserted behaviors in their test files; they are not an independent security audit.
 
-Remaining integration work includes worker restart/reorg tests, deployed MUSD and MEZO transfers, deployment automation and monitoring, and an end-to-end receipt matched to a public testnet transaction. No mainnet readiness or completed hosted deployment is claimed.
+A disposable local Anvil integration test covers settlement, restart, confirmation isolation, and reorg rollback. A guarded contract deployment script, Docker image, and worker health probe are included. Remaining deployment-level work includes actual Mezo Testnet MUSD and MEZO transfers, hosted monitoring, and an end-to-end receipt matched to a public testnet transaction. No mainnet readiness or completed hosted deployment is claimed.
 
 The landing page remains a presentation layer with a local payment-split illustration. Separate merchant/customer workspaces connect injected EVM wallets to the protocol API and contracts; see [frontend integration](frontend.md). Browser tests use controlled fixtures, not funded live transactions.

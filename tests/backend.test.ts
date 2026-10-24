@@ -200,7 +200,7 @@ test('router is unset by default and production requires HTTPS', async t => {
   assert.throws(() => configFromEnv({ DATABASE_URL: 'postgres://unused', PUBLIC_APP_URL: origin, NODE_ENV: 'production' }), /HTTPS/);
 });
 
-test('expired quotes cannot authorize, generate checkout links or accept transaction hints', async t => {
+test('expired quotes reject new authorization but accept delayed transaction recovery', async t => {
   const { app, authorize } = await fixture(t);
   const data = await authorize();
   t.mock.method(Date, 'now', () => Date.parse(data.payload.expiresAt) + 1000);
@@ -208,11 +208,11 @@ test('expired quotes cannot authorize, generate checkout links or accept transac
   assert.equal((await app.inject({ url })).json().status, 'expired');
   assert.equal((await app.inject({ url: `${url}/qr` })).statusCode, 409);
   assert.equal((await app.inject({ method: 'POST', url: `${url}/authorize`, headers: { origin }, cookies: data.cookies, payload: { signature: data.signature } })).statusCode, 409);
-  assert.equal((await app.inject({ method: 'POST', url: `${url}/transactions`, headers: { origin }, cookies: data.cookies, payload: { txHash: `0x${'aa'.repeat(32)}` } })).statusCode, 409);
+  assert.equal((await app.inject({ method: 'POST', url: `${url}/transactions`, headers: { origin }, cookies: data.cookies, payload: { txHash: `0x${'aa'.repeat(32)}` } })).statusCode, 202);
   const retry = await app.inject(data.request);
   assert.equal(retry.statusCode, 200);
   assert.equal(retry.json().id, data.order.id);
-  assert.equal(retry.json().status, 'expired');
+  assert.equal(retry.json().status, 'submitted');
 });
 
 test('merchant plan lists enforce ownership and preserve unsigned drafts for retry',async t=>{
@@ -233,4 +233,21 @@ test('campaign creation can be retried from stored terms only by the owning merc
  const retry=await app.inject(request);assert.equal(retry.statusCode,200,retry.body);assert.deepEqual(retry.json(),created.json().transaction);
  assert.equal((await app.inject({...request,cookies:await login(stranger)})).statusCode,403);
  await db.query("UPDATE campaigns SET terms=jsonb_set(terms,'{expiresAt}','1') WHERE id=$1",[created.json().id]);assert.equal((await app.inject(request)).statusCode,409);
+});
+
+
+test('payment recovery is wallet-scoped and late callbacks preserve confirmed settlement',async t=>{
+ const {app,db,authorize,login}=await fixture(t);const data=await authorize();const url=`/v1/orders/${data.order.id}`;
+ const txHash=`0x${'ab'.repeat(32)}`;
+ const request={method:'POST' as const,url:`${url}/transactions`,headers:{origin},cookies:data.cookies,payload:{txHash}};
+ assert.equal((await app.inject({url})).json().merchant.name,'Coffee shop');
+ assert.equal((await app.inject(request)).statusCode,202);
+ assert.equal((await app.inject({url:`${url}/attempt`})).statusCode,401);
+ assert.equal((await app.inject({url:`${url}/attempt`,cookies:await login(stranger)})).json().attempt,null);
+ const attempt=(await app.inject({url:`${url}/attempt`,cookies:data.cookies})).json().attempt;
+ assert.equal(attempt.hash,txHash);assert.equal(attempt.retryAllowed,false);
+ await db.query("UPDATE orders SET status='confirmed',settlement_tx=$1,settlement_block=10 WHERE id=$2",[txHash,data.order.id]);
+ assert.equal((await app.inject(request)).statusCode,202);
+ assert.equal((await app.inject({...request,payload:{txHash:`0x${'bc'.repeat(32)}`}})).statusCode,202);
+ const status=(await app.inject({url:`${url}/status`})).json();assert.equal(status.status,'confirmed');assert.equal(status.transactionHash,txHash);assert.equal(status.blockNumber,10);
 });

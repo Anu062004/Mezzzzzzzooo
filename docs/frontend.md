@@ -43,10 +43,14 @@ On Vercel, configure `API_ORIGIN` to the independently hosted API's HTTPS origin
 - Approval amounts are bounded to the payment or subscription maximum. The wallet review shows the allowance, target contract and action.
 - After approval inclusion, checkout preparation runs again to revalidate allowance and simulate payment.
 - A submitted transaction remains pending. Only a canonical, confirmed indexer result marks a payment confirmed.
+- Public transaction references are saved in browser storage immediately after broadcast. If the callback fails, reconnecting and refreshing retries recording the same hash without broadcasting another payment. Signed-order callbacks are accepted after expiry so delayed recovery does not discard a valid submission.
+- One-off payment retries are offered only after the API verifies the exact payer, target, calldata, native value, and a canonical reverted receipt at the configured confirmation depth. Missing receipts and RPC errors remain pending.
+- Merchant checkout details poll every five seconds. Customer checkout status errors are visible, and a pending submission takes precedence over an expired link.
+- Confirmed receipts show the merchant, payer, split, block, and transaction; receipt downloads recheck confirmation before saving. Printed/downloaded receipts are snapshots and may become outdated after a reorg.
 - Refunds are merchant-funded and do not recover previously distributed cashback or referral shares.
 - Discounts do not automatically alter another quote. The merchant must create the intended discounted checkout.
 - QR scanning accepts only supported checkout, merchant and subscription URLs on the current website's origin. Camera access is requested on demand and stopped when leaving the scanner.
 
 ## Verification limits
 
-The browser suite uses controlled API/wallet fixtures for transaction flows; it does not broadcast funded transactions. Unit tests verify exact amounts and QR URL restrictions. Backend tests cover real signatures, session handling and merchant ownership, and proxy tests cover cookie/origin forwarding and failure behavior. Live Mezo testnet settlement, MEZO precompile reward transfers, and indexer recovery still need deployment-level verification.
+The browser suite uses controlled API/wallet fixtures for transaction flows; it does not broadcast funded transactions. Unit tests verify exact amounts and QR URL restrictions. Backend tests cover real signatures, session handling and merchant ownership, and proxy tests cover cookie/origin forwarding and failure behavior. Live Mezo testnet settlement, MEZO precompile reward transfers, and hosted indexer recovery still need deployment-level verification. A separate local Anvil/PostgreSQL integration test now exercises real contract settlement, restart, confirmation isolation, and reorg rollback. See [deployment and verification](deployment.md).

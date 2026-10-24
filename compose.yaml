@@ -11,5 +11,51 @@ services:
       test: ["CMD-SHELL", "pg_isready -U mezoloop"]
       interval: 5s
       retries: 10
+  migrate:
+    profiles: [backend]
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://mezoloop:mezoloop@db:5432/mezoloop
+    command: [node, --import, tsx, packages/db/migrate.ts]
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    profiles: [backend]
+    build: .
+    init: true
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://mezoloop:mezoloop@db:5432/mezoloop
+      HOST: 0.0.0.0
+      PORT: 3001
+      NODE_ENV: development
+    ports: ["127.0.0.1:3001:3001"]
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    profiles: [backend]
+    build: .
+    init: true
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://mezoloop:mezoloop@db:5432/mezoloop
+      NODE_ENV: development
+    command: [node, --import, tsx, apps/worker/src/server.ts]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, --import, tsx, apps/worker/src/health.ts]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 volumes:
   postgres_data:

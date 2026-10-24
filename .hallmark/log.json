@@ -1,5 +1,19 @@
 [
   {
+    "date": "2026-10-24",
+    "macrostructure": "Payment checkout and receipt",
+    "theme": "MezoLoop graphite/cobalt",
+    "enrichment": "none",
+    "brief": "Recoverable wallet payments, live merchant confirmation, and printable receipts",
+    "viewports": [
+      320,
+      375,
+      414,
+      768,
+      1440
+    ]
+  },
+  {
     "date": "2026-10-23",
     "macrostructure": "Application workspace",
     "theme": "MezoLoop graphite/cobalt",
